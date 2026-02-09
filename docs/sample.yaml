@@ -1,0 +1,63 @@
+﻿memory:
+  banks:
+    # ----------------------------------------
+    # 1) OPEN MEMORY (default: open for all)
+    # ----------------------------------------
+    - id: 10
+      name: bit_main
+      unit_width_bits: 1
+      units: 1024
+
+    # ----------------------------------------
+    # 2) SEALED MEMORY
+    #    INIT allowed only from specific CIDRs
+    #    ACCESS implicitly allowed for INIT CIDRs
+    # ----------------------------------------
+    - id: 20
+      name: byte_main
+      unit_width_bits: 8
+      units: 4096
+      init:
+        allow_cidr:
+          - "127.0.0.1/32"
+          - "192.168.1.0/24"
+
+    # ----------------------------------------
+    # 3) OPEN MEMORY WITH RESTRICTED ACCESS
+    # ----------------------------------------
+    - id: 30
+      name: reg16_main
+      unit_width_bits: 16
+      units: 10000
+      access:
+        allow_cidr:
+          - "10.0.0.0/8"
+
+    # ----------------------------------------
+    # 4) SEALED MEMORY WITH EXPANDED ACCESS
+    # ----------------------------------------
+    - id: 40
+      name: blk128_fast
+      unit_width_bits: 128
+      units: 512
+      init:
+        allow_cidr:
+          - "127.0.0.1/32"
+      access:
+        allow_cidr:
+          - "192.168.1.0/24"
+
+    # ----------------------------------------
+    # 5) CUSTOM WIDTH MEMORY
+    # ----------------------------------------
+    - id: 55
+      name: enum5_custom
+      unit_width_bits: 5
+      units: 100
+
+listeners:
+  - name: tcp_9000
+    bind: "0.0.0.0:9000"
+
+  - name: tcp_9001
+    bind: "0.0.0.0:9001"
