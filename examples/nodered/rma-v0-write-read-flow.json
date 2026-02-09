@@ -1,0 +1,273 @@
+﻿[
+    {
+        "id": "6e5e781685e4ab90",
+        "type": "tab",
+        "label": "RMA READ/WRITE EXAMPLE",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "47dec36bb9c7d133",
+        "type": "inject",
+        "z": "6e5e781685e4ab90",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 100,
+        "wires": [
+            [
+                "fe290205ce9e42c6"
+            ]
+        ]
+    },
+    {
+        "id": "6240be2c8b8ab861",
+        "type": "debug",
+        "z": "6e5e781685e4ab90",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "bce8634cb4c5f7f0",
+        "type": "tcp request",
+        "z": "6e5e781685e4ab90",
+        "name": "",
+        "server": "127.0.0.1",
+        "port": "9000",
+        "out": "time",
+        "ret": "buffer",
+        "splitc": "0",
+        "newline": "",
+        "trim": false,
+        "tls": "",
+        "x": 630,
+        "y": 160,
+        "wires": [
+            [
+                "97e829bf5f302a82"
+            ]
+        ]
+    },
+    {
+        "id": "fe290205ce9e42c6",
+        "type": "function",
+        "z": "6e5e781685e4ab90",
+        "name": "Write",
+        "func": "// WRITE 2 units (4 bytes) at unit index 0\n\nconst OP_WRITE = 0x01;\nconst MID = 0x00;\nconst START = 0; // unit index\nconst COUNT = 2; // units (2 bytes each → 4 bytes)\n\nlet buf = Buffer.alloc(10 + 4);\n\nbuf[0] = OP_WRITE;\nbuf[1] = MID;\nbuf.writeUInt32BE(START, 2);\nbuf.writeUInt32BE(COUNT, 6);\n\n// DATA (4 bytes)\nbuf[10] = 0xDE;\nbuf[11] = 0xAD;\nbuf[12] = 0xBE;\nbuf[13] = 0xEF;\n\nmsg.payload = buf;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 100,
+        "wires": [
+            [
+                "bce8634cb4c5f7f0"
+            ]
+        ]
+    },
+    {
+        "id": "7bb491095ccbe779",
+        "type": "function",
+        "z": "6e5e781685e4ab90",
+        "name": "Read",
+        "func": "// READ 2 units (4 bytes) from unit index 0\n\nconst OP_READ = 0x02;\nconst MID = 0x00;\nconst START = 0;\nconst COUNT = 2;\n\nlet buf = Buffer.alloc(10);\n\nbuf[0] = OP_READ;\nbuf[1] = MID;\nbuf.writeUInt32BE(START, 2);\nbuf.writeUInt32BE(COUNT, 6);\n\nmsg.payload = buf;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 140,
+        "wires": [
+            [
+                "bce8634cb4c5f7f0"
+            ]
+        ]
+    },
+    {
+        "id": "da0ccbea63d122b1",
+        "type": "inject",
+        "z": "6e5e781685e4ab90",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 220,
+        "y": 140,
+        "wires": [
+            [
+                "7bb491095ccbe779"
+            ]
+        ]
+    },
+    {
+        "id": "bed3543311c3b41a",
+        "type": "function",
+        "z": "6e5e781685e4ab90",
+        "name": "Write String",
+        "func": "// WRITE string to RMA memory\n\nconst OP_WRITE = 0x01;\nconst MID = 0x00;\nconst START = 0;\n\n// String to write\nconst text = \"HELLO RMA\";\n\n// Encode to UTF-8\nlet data = Buffer.from(text, \"utf8\");\n\n// Pad to even length (unit_width_bits = 16 → 2 bytes)\nif (data.length % 2 !== 0) {\n    data = Buffer.concat([data, Buffer.from([0x00])]);\n}\n\nconst COUNT = data.length / 2; // units\n\nlet buf = Buffer.alloc(10 + data.length);\n\nbuf[0] = OP_WRITE;\nbuf[1] = MID;\nbuf.writeUInt32BE(START, 2);\nbuf.writeUInt32BE(COUNT, 6);\n\n// Copy string bytes\ndata.copy(buf, 10);\n\nmsg.payload = buf;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 180,
+        "wires": [
+            [
+                "bce8634cb4c5f7f0"
+            ]
+        ]
+    },
+    {
+        "id": "bdc6c12b857e8b9e",
+        "type": "inject",
+        "z": "6e5e781685e4ab90",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 180,
+        "wires": [
+            [
+                "bed3543311c3b41a"
+            ]
+        ]
+    },
+    {
+        "id": "0ac595e7ea2fe289",
+        "type": "function",
+        "z": "6e5e781685e4ab90",
+        "name": "Read String",
+        "func": "// READ string from RMA memory\n\nconst OP_READ = 0x02;\nconst MID = 0x00;\nconst START = 0;\nconst COUNT = 5; // must match what we wrote\n\nlet buf = Buffer.alloc(10);\n\nbuf[0] = OP_READ;\nbuf[1] = MID;\nbuf.writeUInt32BE(START, 2);\nbuf.writeUInt32BE(COUNT, 6);\n\nmsg.payload = buf;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 220,
+        "wires": [
+            [
+                "bce8634cb4c5f7f0"
+            ]
+        ]
+    },
+    {
+        "id": "0e4fe871369d55de",
+        "type": "inject",
+        "z": "6e5e781685e4ab90",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 220,
+        "wires": [
+            [
+                "0ac595e7ea2fe289"
+            ]
+        ]
+    },
+    {
+        "id": "97e829bf5f302a82",
+        "type": "function",
+        "z": "6e5e781685e4ab90",
+        "name": "Decode Buffer",
+        "func": "// READ STRING from RMA\n// Expects response format:\n// [OP][MID][START(4)][COUNT(4)][DATA...]\n\nconst HEADER_SIZE = 10;\n\n// Ensure payload is a Buffer\nif (!Buffer.isBuffer(msg.payload)) {\n    node.error(\"Payload is not a Buffer\");\n    return null;\n}\n\n// Extract data bytes\nlet data = msg.payload.slice(HEADER_SIZE);\n\n// Remove trailing null padding (0x00)\nwhile (data.length > 0 && data[data.length - 1] === 0x00) {\n    data = data.slice(0, -1);\n}\n\n// Decode UTF-8 string\nmsg.payload = data.toString(\"utf8\");\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 160,
+        "wires": [
+            [
+                "6240be2c8b8ab861"
+            ]
+        ]
+    },
+    {
+        "id": "6ade9b454896ad58",
+        "type": "comment",
+        "z": "6e5e781685e4ab90",
+        "name": "Readme",
+        "info": "This flow tests RMA v0 using raw TCP.\n\nARCHITECTURE\n- RMA behaves like RAM (byte store only)\n- No ACK on WRITE\n- Verification is READ-back only\n- All encoding/decoding is client-side\n\nPACKET FORMAT\nWRITE:\n[ OP=0x01 ][ MID ][ START(4B) ][ COUNT(4B) ][ DATA... ]\n\nREAD:\n[ OP=0x02 ][ MID ][ START(4B) ][ COUNT(4B) ]\n\n- Big-endian\n- COUNT = number of units\n- unit_width_bits = 16 (2 bytes per unit)\n\nFLOW USAGE\n1) Click \"Write\" or \"Write String\"\n   - Sends data to RMA memory\n   - No response expected\n\n2) Click \"Read\" or \"Read String\"\n   - Reads data back from memory\n   - Debug shows raw bytes or decoded string\n\nSTRING HANDLING\n- Strings are encoded as UTF-8 bytes\n- Data is padded to even length (16-bit units)\n- Trailing 0x00 bytes are stripped on read\n\nCONFIG\n- RMA bind: :9000\n- MID: 0\n- START: 0\n- Example string: \"HELLO RMA\"\n\nRULE\nRMA stores bytes only.\nMeaning is assigned by the client.\n",
+        "x": 600,
+        "y": 100,
+        "wires": []
+    }
+]

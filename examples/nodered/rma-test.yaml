@@ -1,0 +1,10 @@
+﻿memory:
+  banks:
+    - id: 0
+      name: test
+      unit_width_bits: 16
+      units: 1024
+
+listeners:
+  - name: rawtcp
+    bind: ":9000"
