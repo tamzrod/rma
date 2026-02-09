@@ -1,48 +1,49 @@
-﻿package memorybuilder
+package memorybuilder
 
 // Path: internal/memorybuilder/builder.go
 
 import (
-"github.com/tamzrod/rma/internal/config"
-"github.com/tamzrod/rma/internal/core/memory"
+	"github.com/tamzrod/rma/internal/config"
+	"github.com/tamzrod/rma/internal/core/memory"
 )
 
 type Builder struct {
-core *memory.Core
+	core *memory.Core
 }
 
 func New() *Builder {
-return &Builder{}
+	return &Builder{}
 }
 
-// Build prepares the memory core.
-// Actual bank creation is delegated to the memory core contract
-// and will be wired once the bank-creation API is finalized.
 func (b *Builder) Build(cfg *config.Config) error {
-if cfg == nil {
-return ErrNilConfig
+	specs := make([]memory.BankSpec, 0, len(cfg.Memory.Banks))
+	for _, bank := range cfg.Memory.Banks {
+		specs = append(specs, memory.BankSpec{
+			ID:            memory.MemoryID(bank.ID),
+			UnitWidthBits: bank.UnitWidthBits,
+			Units:         bank.Units,
+			Name:          bank.Name,
+		})
+	}
+
+	core := memory.NewCore()
+	if err := core.BuildFromSpecs(specs); err != nil {
+		return err
+	}
+
+	b.core = core
+	return nil
 }
 
-b.core = memory.NewCore()
-return nil
-}
-
-// Init performs INIT-phase actions.
-// Actual shaping logic will be added once memory INIT semantics
-// are formally wired.
 func (b *Builder) Init(cfg *config.Config) error {
-if b.core == nil {
-return ErrInitPhase
-}
-return nil
+	return nil
 }
 
-// Seal finalizes the memory layout.
 func (b *Builder) Seal() error {
-if b.core == nil {
-return ErrMemoryCreate
+	b.core.Seal()
+	return nil
 }
 
-b.core.Seal()
-return nil
+func (b *Builder) Core() *memory.Core {
+	return b.core
 }

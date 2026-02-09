@@ -1,56 +1,56 @@
-﻿package bootstrap
+package bootstrap
 
 // Path: internal/bootstrap/bootstrap.go
+//
+// Bootstrap orchestrates startup lifecycle:
+//   Load config -> Build memory -> Init -> Seal -> Start listeners
 
 import (
-"github.com/tamzrod/rma/internal/config"
+	"github.com/tamzrod/rma/internal/config"
+	"github.com/tamzrod/rma/internal/core/memory"
+	"github.com/tamzrod/rma/internal/memorybuilder"
 )
 
-// Interfaces keep bootstrap policy-blind and replaceable
-
-type MemoryBuilder interface {
-Build(cfg *config.Config) error
-Init(cfg *config.Config) error
-Seal() error
-}
-
+// ListenerStarter defines how runtime listeners are started.
 type ListenerStarter interface {
-Start(cfg *config.Config) error
+	Start(*config.Config, *memory.Core) error
 }
 
-// Run executes the full RMA bootstrap sequence.
-// Order is strict and must not be altered.
 func Run(
-configPath string,
-mem MemoryBuilder,
-listeners ListenerStarter,
+	configPath string,
+	mem *memorybuilder.Builder,
+	listeners ListenerStarter,
 ) error {
 
-// 1. Load + validate configuration
-cfg, err := config.Load(configPath)
-if err != nil {
-return ErrConfigLoadFailed
-}
+	// 1) Load config
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		return err
+	}
 
-// 2. Build memory layout
-if err := mem.Build(cfg); err != nil {
-return ErrMemoryBuildFailed
-}
+	// 2) Build memory
+	if err := mem.Build(cfg); err != nil {
+		return err
+	}
 
-// 3. Perform INIT (if defined)
-if err := mem.Init(cfg); err != nil {
-return ErrInitFailed
-}
+	// 3) Init (noop for now)
+	if err := mem.Init(cfg); err != nil {
+		return err
+	}
 
-// 4. Seal memory
-if err := mem.Seal(); err != nil {
-return ErrSealFailed
-}
+	// 4) Seal
+	if err := mem.Seal(); err != nil {
+		return err
+	}
 
-// 5. Start listeners (runtime begins)
-if err := listeners.Start(cfg); err != nil {
-return ErrListenerFailed
-}
+	core := mem.Core()
 
-return nil
+	// 5) Start listeners
+	if listeners != nil {
+		if err := listeners.Start(cfg, core); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
