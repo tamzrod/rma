@@ -70,4 +70,51 @@ Core never does.
 
 ---
 
+## Docker
+
+RMA ships with a multi-stage `Dockerfile` that produces a minimal runtime image with a preloaded default configuration.
+
+### Default configuration
+
+The image bundles `config/default.yaml`:
+
+```yaml
+memory:
+  banks:
+    - id: 0
+      name: default
+      unit_width_bits: 16
+      units: 1024
+
+listeners:
+  - name: rawtcp
+    bind: ":9000"
+```
+
+### Build
+
+```sh
+docker build -t rma .
+```
+
+### Run
+
+```sh
+docker run -p 9000:9000 rma
+```
+
+The container starts the raw TCP listener on port `9000` using the preloaded configuration.
+
+### Override configuration
+
+Mount a custom YAML file to replace the default configuration at runtime:
+
+```sh
+docker run -p 9000:9000 -v $(pwd)/my-config.yaml:/app/config/default.yaml rma
+```
+
+The override must satisfy the same schema and validation rules as any other RMA configuration file.
+
+---
+
 ## Repository Layout
