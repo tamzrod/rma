@@ -4,7 +4,7 @@ Repository: `tamzrod/rma`
 Development branch: `development`
 
 ## Routes
-- **operation cwal**: read `operation cwal.md`, the first marker blocks in `workflow/active_work/README.md` and `handoff.md`, and the authorized CURRENT task only. Run `bash scripts/cwal-check.sh` before work.
+- **operation cwal**: read `operation cwal.md`, the first marker blocks in `workflow/active_work/README.md` and `handoff.md`, and the authorized CURRENT task only. Run `bash scripts/cwal-check.sh` before work. The owner-approved OpenHands resume for blocked RMA-001 is specified in `operation cwal.md`; do not assume the exception applies to other tasks.
 - **PLAN**: read-only design, task proposal, or risk evaluation; no implementation or promotion.
 - **CHECK / pre-PR audit**: independent read-only assessment of actual diff, tests, source contracts, and evidence. Findings do not authorize fixes.
 
