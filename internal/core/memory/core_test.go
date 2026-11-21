@@ -165,3 +165,24 @@ func TestConcurrentAtomicReadWrite(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestAggregateLimitFailsBeforeAllocation(t *testing.T) {
+	c := NewCore()
+	var specs []BankSpec
+	for i := 0; i < 5; i++ {
+		specs = append(specs, BankSpec{
+			ID: MemoryID(i + 1), UnitWidthBits: 8, Units: maxBankBytes,
+		})
+	}
+	if err := c.BuildFromSpecs(specs); !errors.Is(err, ErrMemoryTooLarge) {
+		t.Fatalf("aggregate cap: %v", err)
+	}
+	for _, spec := range specs {
+		if _, err := c.ReadUnits(spec.ID, 0, 1); !errors.Is(err, ErrBankNotFound) {
+			t.Fatalf("partial aggregate build: id=%d err=%v", spec.ID, err)
+		}
+	}
+	if got := bitsToBytes(math.MaxUint64); got != math.MaxUint64/8+1 {
+		t.Fatalf("bitsToBytes overflow: %d", got)
+	}
+}
