@@ -5,9 +5,12 @@ import (
 	"sync"
 )
 
-// maxBankBytes bounds resource use from user-supplied configuration.
-// Larger memory pools require an explicit capacity contract revision.
-const maxBankBytes uint64 = 64 << 20
+// Bank and total capacity limits prevent configuration-induced OOM.
+// A larger footprint requires an explicit capacity-contract revision.
+const (
+	maxBankBytes  uint64 = 64 << 20
+	maxTotalBytes uint64 = 256 << 20
+)
 
 type bank struct {
 	mu     sync.RWMutex
@@ -16,21 +19,29 @@ type bank struct {
 	bitLen uint64
 }
 
-func newBank(spec BankSpec) (*bank, error) {
+func validatedSize(spec BankSpec) (uint64, uint64, error) {
 	if spec.UnitWidthBits == 0 {
-		return nil, ErrInvalidUnitWidth
+		return 0, 0, ErrInvalidUnitWidth
 	}
 	if spec.Units == 0 {
-		return nil, ErrInvalidUnits
+		return 0, 0, ErrInvalidUnits
 	}
 	w := uint64(spec.UnitWidthBits)
 	if spec.Units > math.MaxUint64/w {
-		return nil, ErrMemoryTooLarge
+		return 0, 0, ErrMemoryTooLarge
 	}
 	totalBits := w * spec.Units
 	totalBytes := bitsToBytes(totalBits)
 	if totalBytes > maxBankBytes || totalBytes > uint64(int(^uint(0)>>1)) {
-		return nil, ErrMemoryTooLarge
+		return 0, 0, ErrMemoryTooLarge
+	}
+	return totalBits, totalBytes, nil
+}
+
+func newBank(spec BankSpec) (*bank, error) {
+	totalBits, totalBytes, err := validatedSize(spec)
+	if err != nil {
+		return nil, err
 	}
 	return &bank{
 		spec: spec,
@@ -39,7 +50,7 @@ func newBank(spec BankSpec) (*bank, error) {
 	}, nil
 }
 
-// span validates in units before multiplication, preventing wraparound.
+// span checks logical unit bounds before offset arithmetic.
 func (b *bank) span(start uint64, count uint32) (uint64, uint64, error) {
 	if count == 0 {
 		return 0, 0, ErrInvalidCount
