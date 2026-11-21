@@ -3,7 +3,7 @@ Package: RMA-CORE-HARDENING
 Branch: development
 CURRENT: RMA-001
 QUEUED: NONE
-Status: TASK_READY
+Status: TASK_BLOCKED
 
 # RMA — CWAL Handoff
 
@@ -17,3 +17,9 @@ Promote a bounded first CURRENT task to harden `internal/core/memory`: concurren
 
 ## Checkpoint convention
 On work, record exact commit SHA, tests PASS/FAIL/NOT_RUN, remaining risks and the next safe action. Keep this handoff short; archived evidence belongs under `docs/verification/`.
+
+## RMA-001 checkpoint — tests not executed
+- Implemented memory locks, checked bounds/allocations, safe missing-bank errors and focused tests on development.
+- Required Go 1.25+ test/race/vet/build gates are NOT_RUN; environment has Go 1.23.2 and cannot access GitHub through local git.
+- Status TASK_BLOCKED pending real build/test gate. See `docs/verification/RMA-001.md`.
+- Do not archive or promote automatically. No PR, merge, deploy or main changes.
