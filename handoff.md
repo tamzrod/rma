@@ -1,9 +1,9 @@
 Repository: tamzrod/rma
-Package: NONE
+Package: RMA-CORE-HARDENING
 Branch: development
-CURRENT: NONE
+CURRENT: RMA-001
 QUEUED: NONE
-Status: NO_CURRENT
+Status: TASK_READY
 
 # RMA — CWAL Handoff
 
