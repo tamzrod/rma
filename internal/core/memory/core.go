@@ -1,34 +1,44 @@
 package memory
 
-// Path: internal/core/memory/core.go
-//
-// Core owns banks and exposes minimal RAM-like doors.
-// No semantics. No policy. No safety net.
+import "sync"
 
+// Core owns the memory-bank registry. Its lock protects layout changes;
+// each bank protects its own read/write contents independently.
 type Core struct {
+	mu     sync.RWMutex
 	banks  map[MemoryID]*bank
 	sealed bool
 }
 
 func NewCore() *Core {
-	return &Core{
-		banks: make(map[MemoryID]*bank),
-	}
+	return &Core{banks: make(map[MemoryID]*bank)}
 }
 
-// Seal locks the layout. After this, memory behaves like RAM.
+// Seal prevents new banks from being created. It does not prohibit data writes.
 func (c *Core) Seal() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.sealed = true
 }
 
-// WriteUnits writes raw data into memory using unit addressing.
+// WriteUnits atomically writes a bounded range into one bank.
 func (c *Core) WriteUnits(id MemoryID, start uint64, count uint32, data []byte) error {
-	b := c.banks[id]
+	c.mu.RLock()
+	b, ok := c.banks[id]
+	c.mu.RUnlock()
+	if !ok {
+		return ErrBankNotFound
+	}
 	return b.write(start, count, data)
 }
 
-// ReadUnits reads raw data from memory using unit addressing.
+// ReadUnits returns an independent, consistent copy of one bank range.
 func (c *Core) ReadUnits(id MemoryID, start uint64, count uint32) ([]byte, error) {
-	b := c.banks[id]
+	c.mu.RLock()
+	b, ok := c.banks[id]
+	c.mu.RUnlock()
+	if !ok {
+		return nil, ErrBankNotFound
+	}
 	return b.read(start, count)
 }
