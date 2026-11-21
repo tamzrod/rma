@@ -22,7 +22,8 @@ for i in "${!a[@]}"; do [[ "${a[i]}" == "${b[i]}" ]] || fail "marker mismatch at
 [[ "$(git branch --show-current)" == "development" ]] || fail "wrong checkout branch"
 [[ -z "$(git status --porcelain)" ]] || fail "dirty worktree; preserve/reconcile first"
 if [[ "${a[3]}" == NONE ]]; then
-  [[ "${a[4]}" == NONE && "${a[5]}" == NO_CURRENT ]] || fail "inconsistent empty state"
+  [[ "${a[4]}" == NONE ]] || fail "NONE CURRENT with queue" 
+  [[ "${a[5]}" == NO_CURRENT || "${a[5]}" == WORK_PACKAGE_READY ]] || fail "invalid empty state"
   echo "CWAL CHECK OK: NO_CURRENT (no engineering authority)"; exit 0
 fi
 [[ "${a[1]}" != NONE ]] || fail "missing package"
