@@ -21,7 +21,7 @@ func (c *Core) BuildFromSpecs(specs []BankSpec) error {
 			return ErrDuplicateBank
 		}
 		seen[spec.ID] = struct{}{}
-		_, size, err := validatedSize(spec)
+		size, err := validatedSize(spec)
 		if err != nil {
 			return err
 		}

@@ -13,41 +13,35 @@ const (
 )
 
 type bank struct {
-	mu     sync.RWMutex
-	spec   BankSpec
-	buf    []byte
-	bitLen uint64
+	mu   sync.RWMutex
+	spec BankSpec
+	buf  []byte
 }
 
-func validatedSize(spec BankSpec) (uint64, uint64, error) {
+func validatedSize(spec BankSpec) (uint64, error) {
 	if spec.UnitWidthBits == 0 {
-		return 0, 0, ErrInvalidUnitWidth
+		return 0, ErrInvalidUnitWidth
 	}
 	if spec.Units == 0 {
-		return 0, 0, ErrInvalidUnits
+		return 0, ErrInvalidUnits
 	}
 	w := uint64(spec.UnitWidthBits)
 	if spec.Units > math.MaxUint64/w {
-		return 0, 0, ErrMemoryTooLarge
+		return 0, ErrMemoryTooLarge
 	}
-	totalBits := w * spec.Units
-	totalBytes := bitsToBytes(totalBits)
-	if totalBytes > maxBankBytes || totalBytes > uint64(int(^uint(0)>>1)) {
-		return 0, 0, ErrMemoryTooLarge
+	totalBytes := bitsToBytes(w * spec.Units)
+	if totalBytes > maxBankBytes || totalBytes > uint64(^uint(0)>>1) {
+		return 0, ErrMemoryTooLarge
 	}
-	return totalBits, totalBytes, nil
+	return totalBytes, nil
 }
 
 func newBank(spec BankSpec) (*bank, error) {
-	totalBits, totalBytes, err := validatedSize(spec)
+	totalBytes, err := validatedSize(spec)
 	if err != nil {
 		return nil, err
 	}
-	return &bank{
-		spec: spec,
-		buf: make([]byte, int(totalBytes)),
-		bitLen: totalBits,
-	}, nil
+	return &bank{spec: spec, buf: make([]byte, int(totalBytes))}, nil
 }
 
 // span checks logical unit bounds before offset arithmetic.

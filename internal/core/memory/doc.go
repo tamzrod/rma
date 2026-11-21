@@ -1,4 +1,4 @@
-﻿package memory
+package memory
 
 // internal/core/memory/doc.go
 //
