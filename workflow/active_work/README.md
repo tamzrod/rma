@@ -3,7 +3,7 @@ Package: RMA-CORE-HARDENING
 Branch: development
 CURRENT: RMA-001
 QUEUED: NONE
-Status: TASK_READY
+Status: TASK_BLOCKED
 
 # RMA — Active Work
 
